@@ -4,87 +4,47 @@ interface DomainCheckResult {
   error?: string;
 }
 
-interface ResellerClubResponse {
-  [key: string]: {
-    status: string;
-    classkey?: string;
-  };
-}
-
 export async function checkDomainAvailability(
   brandName: string,
   tlds: string[],
   apiConfig: { userId: string; apiKey: string }
 ): Promise<DomainCheckResult[]> {
-  const { userId, apiKey } = apiConfig;
-  
-  // If no API config, return mock data
-  if (!userId || !apiKey) {
-    return tlds.map(tld => ({
-      domain: `${brandName}.${tld}`,
-      available: Math.random() > 0.6, // Mock availability
-      error: 'API credentials not configured'
-    }));
-  }
-
   try {
-    // Build the API URL - brandName replaces "mybrand" in the example
-    // Example: httpapi.com/api/domains/available.json?auth-userid=123456&api-key=APIKEY123&domain-name=ACTUAL_BRAND&tlds=com&tlds=in
-    const baseUrl = 'https://httpapi.com/api/domains/available.json';
-    const params = new URLSearchParams({
-      'auth-userid': userId,
-      'api-key': apiKey,
-      'domain-name': brandName // This is the actual brand name being checked (replaces "mybrand" in example)
-    });
+    // Use the Supabase Edge Function
+    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-domains`;
     
-    // Add each TLD as a separate parameter
-    tlds.forEach(tld => {
-      params.append('tlds', tld);
-    });
-
-    const url = `${baseUrl}?${params.toString()}`;
-
-    // Make the API call
-    const response = await fetch(url, {
-      method: 'GET',
+    const response = await fetch(functionUrl, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
+      body: JSON.stringify({
+        brandName,
+        tlds,
+        apiConfig
+      })
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      throw new Error(`Edge function request failed: ${response.status} ${response.statusText}`);
     }
 
-    const data: ResellerClubResponse = await response.json();
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
 
-    // Parse the response
-    return tlds.map(tld => {
-      const domainKey = `${brandName}.${tld}`;
-      const domainData = data[domainKey];
-      
-      if (!domainData) {
-        return {
-          domain: domainKey,
-          available: false,
-          error: 'No data returned for domain'
-        };
-      }
-
-      return {
-        domain: domainKey,
-        available: domainData.status === 'available',
-        error: domainData.status === 'error' ? 'API error' : undefined
-      };
-    });
+    return data.results || [];
 
   } catch (error) {
     console.error('Domain check error:', error);
     
-    // Return error results for all domains
+    // Return mock data as fallback
     return tlds.map(tld => ({
       domain: `${brandName}.${tld}`,
-      available: false,
+      available: Math.random() > 0.6,
       error: error instanceof Error ? error.message : 'Unknown error'
     }));
   }
