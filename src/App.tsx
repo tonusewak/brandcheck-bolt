@@ -294,6 +294,7 @@ function App() {
 
   const simulateSearch = async (term: string) => {
     setIsLoading(true);
+    console.log('Starting domain check for:', brandName);
     
     try {
       // Check domain availability using ResellerClub API
@@ -413,9 +414,11 @@ function App() {
           }
         })));
       } catch (error) {
+      console.log('Domain results:', domainResults);
         console.error('Social media check failed:', error);
         socialResults = mockSocialMediaCheck(brandName); // Fallback to mock
       }
+      console.log('Social results:', socialResults);
 
       // Convert social results to lookup map
       const socialMap = socialResults.reduce((acc, result) => {
