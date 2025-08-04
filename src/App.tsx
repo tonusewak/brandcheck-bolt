@@ -102,11 +102,11 @@ function App() {
   const handleCategorySearch = (value: string) => {
     setCategorySearch(value);
     if (value.trim()) {
-      const matchedCategory = trademarkCategories.find(category =>
+      const matchedCategories = trademarkCategories.filter(category =>
         category.keywords.some(keyword => keyword.includes(value.toLowerCase()))
       );
-      if (matchedCategory && matchedCategory.id !== selectedCategory) {
-        setSelectedCategory(matchedCategory.id);
+      if (matchedCategories.length > 0 && matchedCategories[0].id !== selectedCategory) {
+        setSelectedCategory(matchedCategories[0].id);
       }
     }
   };
@@ -185,31 +185,49 @@ function App() {
   };
 
   const generateTrademarkResults = (name: string, categoryId: number): TrademarkResult[] => {
-    const category = trademarkCategories.find(c => c.id === categoryId);
-    if (!category) return [];
+    const primaryCategory = trademarkCategories.find(c => c.id === categoryId);
+    if (!primaryCategory) return [];
 
-    const random = Math.random();
-    let status: 'available' | 'similar_found' | 'exact_match';
-    let similarMarks = 0;
+    // Find all relevant categories based on the brand name
+    const relevantCategories = trademarkCategories.filter(category => {
+      // Check if the brand name matches any keywords in the category
+      return category.keywords.some(keyword => 
+        name.toLowerCase().includes(keyword) || keyword.includes(name.toLowerCase())
+      );
+    });
 
-    if (random > 0.7) {
-      status = 'available';
-      similarMarks = 0;
-    } else if (random > 0.3) {
-      status = 'similar_found';
-      similarMarks = Math.floor(Math.random() * 5) + 1;
-    } else {
-      status = 'exact_match';
-      similarMarks = 1;
+    // If no relevant categories found, just check the selected category
+    const categoriesToCheck = relevantCategories.length > 0 ? relevantCategories : [primaryCategory];
+    
+    // Ensure the selected category is always included
+    if (!categoriesToCheck.find(c => c.id === categoryId)) {
+      categoriesToCheck.unshift(primaryCategory);
     }
 
-    return [{
-      name,
-      category: category.name,
-      available: status === 'available',
-      similarMarks,
-      status
-    }];
+    return categoriesToCheck.slice(0, 4).map(category => { // Limit to 4 categories max
+      const random = Math.random();
+      let status: 'available' | 'similar_found' | 'exact_match';
+      let similarMarks = 0;
+
+      if (random > 0.7) {
+        status = 'available';
+        similarMarks = 0;
+      } else if (random > 0.3) {
+        status = 'similar_found';
+        similarMarks = Math.floor(Math.random() * 5) + 1;
+      } else {
+        status = 'exact_match';
+        similarMarks = 1;
+      }
+
+      return {
+        name,
+        category: category.name,
+        available: status === 'available',
+        similarMarks,
+        status
+      };
+    });
   };
 
   const generateSuggestions = (name: string): SuggestionResult[] => {
@@ -741,11 +759,11 @@ function App() {
                     </h2>
                     <p className="text-gray-600">
                       {stats.available} of {stats.total} platforms available ({stats.percentage}%)
-                      {trademarkResults.length > 0 && trademarkResults[0].available && 
-                        ' • Trademark available'
+                      {trademarkResults.length > 0 && trademarkResults.every(r => r.available) && 
+                        ` • Trademark available in ${trademarkResults.length} class${trademarkResults.length > 1 ? 'es' : ''}`
                       }
-                      {trademarkResults.length > 0 && !trademarkResults[0].available && 
-                        ' • Trademark conflicts found'
+                      {trademarkResults.length > 0 && trademarkResults.some(r => !r.available) && 
+                        ` • Trademark conflicts found in ${trademarkResults.filter(r => !r.available).length} class${trademarkResults.filter(r => !r.available).length > 1 ? 'es' : ''}`
                       }
                     </p>
                   </div>
@@ -764,84 +782,111 @@ function App() {
               <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
                   <Scale className="w-6 h-6 text-orange-600" />
-                  Trademark Status (India)
+                  Trademark Status (India) - {trademarkResults.length} Class{trademarkResults.length > 1 ? 'es' : ''} Checked
                 </h3>
-                {trademarkResults.map((result, index) => (
-                  <div key={index} className="space-y-4">
-                    <div className={`p-6 rounded-xl border-2 ${
-                      result.status === 'available' 
-                        ? 'border-green-200 bg-green-50' 
-                        : result.status === 'similar_found'
-                        ? 'border-amber-200 bg-amber-50'
-                        : 'border-red-200 bg-red-50'
-                    }`}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-1">
-                            Class {selectedCategory}: {result.category}
-                          </h4>
-                          <p className="text-gray-600">
-                            {selectedCategoryData?.description}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {result.status === 'available' ? (
-                            <CheckCircle className="w-6 h-6 text-green-600" />
-                          ) : (
-                            <XCircle className="w-6 h-6 text-red-600" />
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center p-3 bg-white rounded-lg">
-                          <div className="text-2xl font-bold text-gray-800">
-                            {result.status === 'available' ? '✅' : '⚠️'}
+                <div className="space-y-6">
+                  {trademarkResults.map((result, index) => {
+                    const categoryData = trademarkCategories.find(c => c.name === result.category);
+                    return (
+                      <div key={index} className={`p-6 rounded-xl border-2 ${
+                        result.status === 'available' 
+                          ? 'border-green-200 bg-green-50' 
+                          : result.status === 'similar_found'
+                          ? 'border-amber-200 bg-amber-50'
+                          : 'border-red-200 bg-red-50'
+                      }`}>
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-1">
+                              Class {categoryData?.id}: {result.category}
+                            </h4>
+                            <p className="text-gray-600">
+                              {categoryData?.description}
+                            </p>
+                            {index === 0 && trademarkResults.length > 1 && (
+                              <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                Primary Category
+                              </span>
+                            )}
+                            {index > 0 && (
+                              <span className="inline-block mt-2 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                Related Category
+                              </span>
+                            )}
                           </div>
-                          <div className="text-sm font-medium text-gray-700 mt-1">
-                            {result.status === 'available' ? 'Available' : 
-                             result.status === 'similar_found' ? 'Similar Found' : 'Exact Match'}
-                          </div>
-                        </div>
-                        
-                        <div className="text-center p-3 bg-white rounded-lg">
-                          <div className="text-2xl font-bold text-gray-800">
-                            {result.similarMarks}
-                          </div>
-                          <div className="text-sm font-medium text-gray-700 mt-1">
-                            Similar Marks
+                          <div className="flex items-center gap-2">
+                            {result.status === 'available' ? (
+                              <CheckCircle className="w-6 h-6 text-green-600" />
+                            ) : (
+                              <XCircle className="w-6 h-6 text-red-600" />
+                            )}
                           </div>
                         </div>
                         
-                        <div className="text-center p-3 bg-white rounded-lg">
-                          <div className="text-2xl font-bold text-gray-800">
-                            🇮🇳
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center p-3 bg-white rounded-lg">
+                            <div className="text-2xl font-bold text-gray-800">
+                              {result.status === 'available' ? '✅' : '⚠️'}
+                            </div>
+                            <div className="text-sm font-medium text-gray-700 mt-1">
+                              {result.status === 'available' ? 'Available' : 
+                               result.status === 'similar_found' ? 'Similar Found' : 'Exact Match'}
+                            </div>
                           </div>
-                          <div className="text-sm font-medium text-gray-700 mt-1">
-                            India Registry
+                          
+                          <div className="text-center p-3 bg-white rounded-lg">
+                            <div className="text-2xl font-bold text-gray-800">
+                              {result.similarMarks}
+                            </div>
+                            <div className="text-sm font-medium text-gray-700 mt-1">
+                              Similar Marks
+                            </div>
+                          </div>
+                          
+                          <div className="text-center p-3 bg-white rounded-lg">
+                            <div className="text-2xl font-bold text-gray-800">
+                              🇮🇳
+                            </div>
+                            <div className="text-sm font-medium text-gray-700 mt-1">
+                              India Registry
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 p-3 bg-white rounded-lg">
+                          <div className={`text-sm font-medium ${
+                            result.status === 'available' ? 'text-green-700' :
+                            result.status === 'similar_found' ? 'text-amber-700' : 'text-red-700'
+                          }`}>
+                            {result.status === 'available' && 
+                              '✅ No conflicting trademarks found in this class. You can proceed with trademark application.'
+                            }
+                            {result.status === 'similar_found' && 
+                              `⚠️ ${result.similarMarks} similar trademark(s) found in this class. Review recommended before filing.`
+                            }
+                            {result.status === 'exact_match' && 
+                              '❌ Exact or highly similar trademark already exists in this class. Consider alternative names.'
+                            }
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="mt-4 p-3 bg-white rounded-lg">
-                        <div className={`text-sm font-medium ${
-                          result.status === 'available' ? 'text-green-700' :
-                          result.status === 'similar_found' ? 'text-amber-700' : 'text-red-700'
-                        }`}>
-                          {result.status === 'available' && 
-                            '✅ No conflicting trademarks found. You can proceed with trademark application.'
-                          }
-                          {result.status === 'similar_found' && 
-                            `⚠️ ${result.similarMarks} similar trademark(s) found. Review recommended before filing.`
-                          }
-                          {result.status === 'exact_match' && 
-                            '❌ Exact or highly similar trademark already exists. Consider alternative names.'
-                          }
-                        </div>
+                    );
+                  })}
+                </div>
+                {trademarkResults.length > 1 && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="flex items-start gap-3">
+                      <div className="text-blue-600 text-lg">💡</div>
+                      <div>
+                        <h4 className="font-semibold text-blue-800 mb-1">Multiple Classes Detected</h4>
+                        <p className="text-blue-700 text-sm">
+                          Your brand name "{brandName}" appears to be relevant for multiple trademark classes. 
+                          Consider filing in all relevant classes for comprehensive protection.
+                        </p>
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
                 <div className="mt-4 text-xs text-gray-500 text-center">
                   💡 This is a preliminary check. Consult a trademark attorney for comprehensive analysis before filing.
                 </div>
