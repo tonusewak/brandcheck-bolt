@@ -48,7 +48,7 @@ export default function Settings({ isOpen, onClose, apiConfig, onSaveConfig }: S
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-semibold text-blue-900 mb-2">ResellerClub API Configuration</h3>
               <p className="text-sm text-blue-700">
-                Configure your ResellerClub API credentials for authentic domain availability checking.
+                Configure your ResellerClub API credentials for authentic domain availability checking. The system will check .com and .in availability for each brand name you search.
               </p>
             </div>
 
@@ -99,6 +99,10 @@ export default function Settings({ isOpen, onClose, apiConfig, onSaveConfig }: S
                 <li>Generate your API key</li>
                 <li>Copy your User ID and API Key here</li>
               </ol>
+              <p className="text-xs text-yellow-600 mt-2">
+                <strong>API Format:</strong> The system uses your brand name in place of "mybrand" in the API call:<br/>
+                <code className="text-xs">httpapi.com/api/domains/available.json?auth-userid=YOUR_ID&api-key=YOUR_KEY&domain-name=BRAND_NAME&tlds=com&tlds=in</code>
+              </p>
             </div>
 
             <div className="flex space-x-3 pt-4">

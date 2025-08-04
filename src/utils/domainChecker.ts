@@ -28,12 +28,13 @@ export async function checkDomainAvailability(
   }
 
   try {
-    // Build the API URL
+    // Build the API URL - brandName replaces "mybrand" in the example
+    // Example: httpapi.com/api/domains/available.json?auth-userid=123456&api-key=APIKEY123&domain-name=ACTUAL_BRAND&tlds=com&tlds=in
     const baseUrl = 'https://httpapi.com/api/domains/available.json';
     const params = new URLSearchParams({
       'auth-userid': userId,
       'api-key': apiKey,
-      'domain-name': brandName
+      'domain-name': brandName // This is the actual brand name being checked (replaces "mybrand" in example)
     });
     
     // Add each TLD as a separate parameter
