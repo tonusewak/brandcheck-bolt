@@ -72,7 +72,6 @@ const trademarkCategories = [
 
 function App() {
   const [brandName, setBrandName] = useState('');
-  const [multiSearchMode, setMultiSearchMode] = useState(false);
   const [brandNames, setBrandNames] = useState(['']);
   const [autoSuggest, setAutoSuggest] = useState(true);
   const [checkTrademark, setCheckTrademark] = useState(true);
@@ -85,6 +84,20 @@ function App() {
   const [suggestions, setSuggestions] = useState<SuggestionResult[]>([]);
   const [trademarkResults, setTrademarkResults] = useState<TrademarkResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Auto-detect if brand name contains commas and split into multiple names
+  const isMultiSearch = brandName.includes(',') || brandNames.some(name => name.trim()) && brandNames.length > 1;
+  
+  // Auto-split comma-separated names
+  const handleBrandNameChange = (value: string) => {
+    setBrandName(value);
+    if (value.includes(',')) {
+      const names = value.split(',').map(name => name.trim()).filter(name => name);
+      setBrandNames(names.length > 0 ? names : ['']);
+    } else {
+      setBrandNames([value]);
+    }
+  };
 
   // Filter categories based on search
   const filteredCategories = useMemo(() => {
@@ -266,8 +279,10 @@ function App() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (multiSearchMode) {
-      const validNames = brandNames.filter(name => name.trim());
+    if (isMultiSearch) {
+      const validNames = brandName.includes(',') 
+        ? brandName.split(',').map(name => name.trim()).filter(name => name)
+        : brandNames.filter(name => name.trim());
       if (validNames.length === 0) return;
     } else {
       if (!brandName.trim()) return;
@@ -278,8 +293,11 @@ function App() {
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    if (multiSearchMode) {
-      const mockMultiResults = generateMultiResults(brandNames);
+    if (isMultiSearch) {
+      const validNames = brandName.includes(',') 
+        ? brandName.split(',').map(name => name.trim()).filter(name => name)
+        : brandNames.filter(name => name.trim());
+      const mockMultiResults = generateMultiResults(validNames);
       setMultiResults(mockMultiResults);
       setResults([]);
       setSuggestions([]);
