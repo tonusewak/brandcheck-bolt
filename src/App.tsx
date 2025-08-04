@@ -765,7 +765,7 @@ function App() {
         )}
 
         {/* Single Search Results */}
-        {hasSearched && !isLoading && !multiSearchMode && results.length > 0 && (
+        {hasSearched && !isLoading && !isMultiSearch && results.length > 0 && (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* Stats Overview */}
             {stats && (
