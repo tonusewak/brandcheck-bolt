@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Save, Eye, EyeOff } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Eye, EyeOff, Globe, Copy, Check } from 'lucide-react';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -16,6 +16,36 @@ export default function Settings({ isOpen, onClose, apiConfig, onSaveConfig }: S
   const [apiKey, setApiKey] = useState(apiConfig.apiKey);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentIP, setCurrentIP] = useState<string>('');
+  const [loadingIP, setLoadingIP] = useState(false);
+  const [ipCopied, setIpCopied] = useState(false);
+
+  const fetchCurrentIP = async () => {
+    setLoadingIP(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-domains/ip`, {
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        }
+      });
+      const data = await response.json();
+      setCurrentIP(data.ip);
+    } catch (error) {
+      console.error('Failed to fetch IP:', error);
+      setCurrentIP('Error fetching IP');
+    }
+    setLoadingIP(false);
+  };
+
+  const copyIPToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(currentIP);
+      setIpCopied(true);
+      setTimeout(() => setIpCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy IP:', error);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -50,6 +80,47 @@ export default function Settings({ isOpen, onClose, apiConfig, onSaveConfig }: S
               <p className="text-sm text-blue-700">
                 Configure your ResellerClub API credentials for authentic domain availability checking. The system will check .com and .in availability for each brand name you search.
               </p>
+            </div>
+
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-orange-900 flex items-center">
+                  <Globe className="w-4 h-4 mr-2" />
+                  IP Whitelisting Required
+                </h3>
+                <button
+                  onClick={fetchCurrentIP}
+                  disabled={loadingIP}
+                  className="text-sm bg-orange-100 hover:bg-orange-200 text-orange-800 px-3 py-1 rounded-md transition-colors"
+                >
+                  {loadingIP ? 'Getting IP...' : 'Get Server IP'}
+                </button>
+              </div>
+              <p className="text-sm text-orange-700 mb-3">
+                ResellerClub requires IP whitelisting for API access. You need to add our server's IP address to your ResellerClub account.
+              </p>
+              {currentIP && (
+                <div className="bg-white border border-orange-300 rounded-md p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Server IP Address:</p>
+                      <code className="text-lg font-mono text-orange-800 bg-orange-100 px-2 py-1 rounded">
+                        {currentIP}
+                      </code>
+                    </div>
+                    <button
+                      onClick={copyIPToClipboard}
+                      className="flex items-center space-x-1 text-orange-600 hover:text-orange-800 transition-colors"
+                    >
+                      {ipCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      <span className="text-sm">{ipCopied ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-orange-600 mt-2">
+                    Add this IP to: ResellerClub Dashboard → Settings → API Settings → IP Whitelist
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -95,9 +166,10 @@ export default function Settings({ isOpen, onClose, apiConfig, onSaveConfig }: S
               <h4 className="font-medium text-yellow-900 mb-1">How to get API credentials:</h4>
               <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside">
                 <li>Sign up at ResellerClub.com</li>
-                <li>Go to Settings → API Settings</li>
-                <li>Generate your API key</li>
+                <li>Go to Settings → API Settings → Generate API key</li>
+                <li>Add the server IP (above) to IP Whitelist</li>
                 <li>Copy your User ID and API Key here</li>
+                <li>Test the connection with a brand search</li>
               </ol>
               <p className="text-xs text-yellow-600 mt-2">
                 <strong>API Format:</strong> The system uses your brand name in place of "mybrand" in the API call:<br/>

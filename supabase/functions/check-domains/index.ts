@@ -26,6 +26,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+// Function to get the current IP address of this Edge Function
+async function getCurrentIP(): Promise<string> {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip;
+  } catch (error) {
+    console.error('Failed to get current IP:', error);
+    return 'Unable to determine IP';
+  }
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -36,6 +48,22 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Special endpoint to get the current IP for whitelisting
+    if (req.method === "GET" && new URL(req.url).pathname.endsWith('/ip')) {
+      const currentIP = await getCurrentIP();
+      return new Response(
+        JSON.stringify({ 
+          ip: currentIP,
+          message: "Add this IP to your ResellerClub API whitelist",
+          instructions: "Go to ResellerClub → Settings → API Settings → IP Whitelist and add this IP"
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     if (req.method !== "POST") {
       return new Response(
         JSON.stringify({ error: "Method not allowed" }),
