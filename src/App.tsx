@@ -24,15 +24,17 @@ interface TrademarkResult {
 
 interface MultiSearchResult {
   name: string;
+  trademark: boolean;
+  trademarkCategory: string;
   domainCom: boolean;
   domainIn: boolean;
   instagram: boolean;
-  twitter: boolean;
   facebook: boolean;
+  twitter: boolean;
+  pinterest: boolean;
   linkedin: boolean;
   youtube: boolean;
   tiktok: boolean;
-  trademark: boolean;
   overallScore: number;
 }
 
@@ -42,7 +44,8 @@ const socialPlatforms = [
   { name: 'Facebook', icon: '📘', baseUrl: 'facebook.com/', key: 'facebook' },
   { name: 'LinkedIn', icon: '💼', baseUrl: 'linkedin.com/company/', key: 'linkedin' },
   { name: 'YouTube', icon: '📺', baseUrl: 'youtube.com/c/', key: 'youtube' },
-  { name: 'TikTok', icon: '🎵', baseUrl: 'tiktok.com/@', key: 'tiktok' }
+  { name: 'TikTok', icon: '🎵', baseUrl: 'tiktok.com/@', key: 'tiktok' },
+  { name: 'Pinterest', icon: '📌', baseUrl: 'pinterest.com/', key: 'pinterest' }
 ];
 
 const trademarkCategories = [
@@ -169,30 +172,34 @@ function App() {
 
   const generateMultiResults = (names: string[]): MultiSearchResult[] => {
     return names.filter(name => name.trim()).map(name => {
+      const trademark = Math.random() > 0.7;
+      const trademarkCategory = selectedCategoryData?.name || 'Business services';
       const domainCom = Math.random() > 0.6;
       const domainIn = Math.random() > 0.4;
       const instagram = Math.random() > 0.5;
-      const twitter = Math.random() > 0.5;
       const facebook = Math.random() > 0.5;
+      const twitter = Math.random() > 0.5;
+      const pinterest = Math.random() > 0.5;
       const linkedin = Math.random() > 0.5;
       const youtube = Math.random() > 0.5;
       const tiktok = Math.random() > 0.5;
-      const trademark = Math.random() > 0.7;
 
-      const availableCount = [domainCom, domainIn, instagram, twitter, facebook, linkedin, youtube, tiktok, trademark].filter(Boolean).length;
-      const overallScore = Math.round((availableCount / 9) * 100);
+      const availableCount = [trademark, domainCom, domainIn, instagram, facebook, twitter, pinterest, linkedin, youtube, tiktok].filter(Boolean).length;
+      const overallScore = Math.round((availableCount / 10) * 100);
 
       return {
         name: name.trim(),
+        trademark,
+        trademarkCategory,
         domainCom,
         domainIn,
         instagram,
-        twitter,
         facebook,
+        twitter,
+        pinterest,
         linkedin,
         youtube,
         tiktok,
-        trademark,
         overallScore
       };
     });
@@ -630,6 +637,18 @@ function App() {
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Brand Name</th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">⚖️</span>
+                          <span className="text-xs">Trademark</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">📋</span>
+                          <span className="text-xs">Category</span>
+                        </div>
+                      </th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">.com</th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">.in</th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">
@@ -640,14 +659,20 @@ function App() {
                       </th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">
                         <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">📘</span>
+                          <span className="text-xs">Facebook</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
                           <span className="text-lg">𝕏</span>
                           <span className="text-xs">X.com</span>
                         </div>
                       </th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">
                         <div className="flex flex-col items-center gap-1">
-                          <span className="text-lg">📘</span>
-                          <span className="text-xs">Facebook</span>
+                          <span className="text-lg">📌</span>
+                          <span className="text-xs">Pinterest</span>
                         </div>
                       </th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">
@@ -668,12 +693,6 @@ function App() {
                           <span className="text-xs">TikTok</span>
                         </div>
                       </th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-lg">⚖️</span>
-                          <span className="text-xs">Trademark</span>
-                        </div>
-                      </th>
                       <th className="text-center py-3 px-4 font-semibold text-gray-700">Score</th>
                     </tr>
                   </thead>
@@ -681,6 +700,18 @@ function App() {
                     {multiResults.map((result, index) => (
                       <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
                         <td className="py-4 px-4 font-medium text-gray-800">{result.name}</td>
+                        <td className="text-center py-4 px-2">
+                          {result.trademark ? (
+                            <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-red-600 mx-auto" />
+                          )}
+                        </td>
+                        <td className="text-center py-4 px-2">
+                          <span className="text-xs text-gray-600 max-w-20 block truncate" title={result.trademarkCategory}>
+                            {result.trademarkCategory}
+                          </span>
+                        </td>
                         <td className="text-center py-4 px-2">
                           {result.domainCom ? (
                             <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
@@ -703,6 +734,13 @@ function App() {
                           )}
                         </td>
                         <td className="text-center py-4 px-2">
+                          {result.facebook ? (
+                            <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-red-600 mx-auto" />
+                          )}
+                        </td>
+                        <td className="text-center py-4 px-2">
                           {result.twitter ? (
                             <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
                           ) : (
@@ -710,7 +748,7 @@ function App() {
                           )}
                         </td>
                         <td className="text-center py-4 px-2">
-                          {result.facebook ? (
+                          {result.pinterest ? (
                             <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
                           ) : (
                             <XCircle className="w-5 h-5 text-red-600 mx-auto" />
@@ -738,13 +776,6 @@ function App() {
                           )}
                         </td>
                         <td className="text-center py-4 px-2">
-                          {result.trademark ? (
-                            <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
-                          ) : (
-                            <XCircle className="w-5 h-5 text-red-600 mx-auto" />
-                          )}
-                        </td>
-                        <td className="text-center py-4 px-4">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                             result.overallScore >= 70 ? 'bg-green-100 text-green-800' :
                             result.overallScore >= 40 ? 'bg-yellow-100 text-yellow-800' :
