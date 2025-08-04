@@ -426,6 +426,17 @@ function App() {
               <SettingsIcon className="w-5 h-5" />
               <span>Settings</span>
             </button>
+            <button
+              onClick={() => setUseMockSocial(!useMockSocial)}
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                useMockSocial 
+                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                  : 'bg-green-100 text-green-800 hover:bg-green-200'
+              }`}
+              title={useMockSocial ? 'Using mock social media checks' : 'Using real social media checks'}
+            >
+              {useMockSocial ? '🎭 Mock' : '🔍 Real'} Social
+            </button>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Instantly check domain, social media, and trademark availability for your brand name. 
