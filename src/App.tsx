@@ -73,6 +73,7 @@ const trademarkCategories = [
 function App() {
   const [brandName, setBrandName] = useState('');
   const [brandNames, setBrandNames] = useState(['']);
+  const [multiSearchMode, setMultiSearchMode] = useState(false);
   const [autoSuggest, setAutoSuggest] = useState(true);
   const [checkTrademark, setCheckTrademark] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(35);
