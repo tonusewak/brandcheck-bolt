@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Globe, Users, CheckCircle, XCircle, Clock, Lightbulb, Scale, ChevronDown, Filter, Plus, Trash2, Settings as SettingsIcon } from 'lucide-react';
 import Settings from './components/Settings';
 import { checkDomainAvailability } from './utils/domainChecker';
+import { checkSocialMediaAvailability, mockSocialMediaCheck } from './utils/socialMediaChecker';
 
 interface AvailabilityResult {
   domain: string;
