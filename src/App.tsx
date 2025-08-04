@@ -387,7 +387,26 @@ function App() {
       const mockMultiResults = generateMultiResults(validNames);
       setMultiResults(mockMultiResults);
       setResults([]);
-      setSuggestions([]);
+        socialMedia: {
+          instagram: socialMap.instagram ?? false,
+          facebook: socialMap.facebook ?? false,
+          twitter: socialMap.twitter ?? false,
+          pinterest: socialMap.pinterest ?? false,
+          linkedin: Math.random() > 0.6, // Still mock for platforms not in the checker
+          youtube: Math.random() > 0.6,
+          tiktok: Math.random() > 0.6,
+        }
+      } catch (error) {
+        console.error('Social media check failed:', error);
+        socialResults = mockSocialMediaCheck(brandName); // Fallback to mock
+      }
+
+      // Convert social results to lookup map
+      const socialMap = socialResults.reduce((acc, result) => {
+        acc[result.platform] = result.available;
+        return acc;
+      }, {} as Record<string, boolean | null>);
+
       setTrademarkResults([]);
       setIsLoading(false);
     } else {
@@ -425,17 +444,6 @@ function App() {
             >
               <SettingsIcon className="w-5 h-5" />
               <span>Settings</span>
-            </button>
-            <button
-              onClick={() => setUseMockSocial(!useMockSocial)}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                useMockSocial 
-                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                  : 'bg-green-100 text-green-800 hover:bg-green-200'
-              }`}
-              title={useMockSocial ? 'Using mock social media checks' : 'Using real social media checks'}
-            >
-              {useMockSocial ? '🎭 Mock' : '🔍 Real'} Social
             </button>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
