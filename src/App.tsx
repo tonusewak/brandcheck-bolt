@@ -387,15 +387,31 @@ function App() {
       const mockMultiResults = generateMultiResults(validNames);
       setMultiResults(mockMultiResults);
       setResults([]);
-        socialMedia: {
-          instagram: socialMap.instagram ?? false,
-          facebook: socialMap.facebook ?? false,
-          twitter: socialMap.twitter ?? false,
-          pinterest: socialMap.pinterest ?? false,
-          linkedin: Math.random() > 0.6, // Still mock for platforms not in the checker
-          youtube: Math.random() > 0.6,
-          tiktok: Math.random() > 0.6,
-        }
+      
+      // Check social media availability for each name
+      let socialResults;
+      try {
+        socialResults = await checkSocialMediaAvailability(brandName);
+        
+        // Convert social results to lookup map
+        const socialMap = socialResults.reduce((acc, result) => {
+          acc[result.platform] = result.available;
+          return acc;
+        }, {} as Record<string, boolean | null>);
+
+        // Update multi results with real social media data
+        setMultiResults(prevResults => prevResults.map(result => ({
+          ...result,
+          socialMedia: {
+            instagram: socialMap.instagram ?? false,
+            facebook: socialMap.facebook ?? false,
+            twitter: socialMap.twitter ?? false,
+            pinterest: socialMap.pinterest ?? false,
+            linkedin: Math.random() > 0.6, // Still mock for platforms not in the checker
+            youtube: Math.random() > 0.6,
+            tiktok: Math.random() > 0.6,
+          }
+        })));
       } catch (error) {
         console.error('Social media check failed:', error);
         socialResults = mockSocialMediaCheck(brandName); // Fallback to mock
