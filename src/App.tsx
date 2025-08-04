@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Globe, Users, CheckCircle, XCircle, Clock, Lightbulb, Scale, ChevronDown, Filter, Plus, Trash2 } from 'lucide-react';
+import { Search, Globe, Users, CheckCircle, XCircle, Clock, Lightbulb, Scale, ChevronDown, Filter, Plus, Trash2, Settings as SettingsIcon } from 'lucide-react';
+import Settings from './components/Settings';
+import { checkDomainAvailability } from './utils/domainChecker';
 
 interface AvailabilityResult {
   domain: string;
@@ -88,6 +90,11 @@ function App() {
   const [suggestions, setSuggestions] = useState<SuggestionResult[]>([]);
   const [trademarkResults, setTrademarkResults] = useState<TrademarkResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiConfig, setApiConfig] = useState({
+    userId: '',
+    apiKey: ''
+  });
 
   // Auto-detect if brand name contains commas and split into multiple names
   const isMultiSearch = brandName.includes(',') || brandNames.some(name => name.trim()) && brandNames.length > 1;
@@ -284,6 +291,76 @@ function App() {
     return suggestions.sort((a, b) => b.score - a.score);
   };
 
+  const simulateSearch = async (term: string) => {
+    setIsLoading(true);
+    
+    try {
+      // Check domain availability using ResellerClub API
+      const domainResults = await checkDomainAvailability(term, ['com', 'in'], apiConfig);
+      
+      // Simulate delay for other checks
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const mockResults = generateMockResults(term);
+      
+      // Update domain results with real data if available
+      if (domainResults.length > 0) {
+        domainResults.forEach(domainResult => {
+          const mockResult = mockResults.find(r => r.domain === domainResult.domain);
+          if (mockResult) {
+            mockResult.available = domainResult.available;
+          }
+        });
+      }
+      
+      setResults(mockResults);
+      setMultiResults([]);
+
+      if (checkTrademark) {
+        const mockTrademarkResults = generateTrademarkResults(term, selectedCategory);
+        setTrademarkResults(mockTrademarkResults);
+      } else {
+        setTrademarkResults([]);
+      }
+
+      if (autoSuggest) {
+        const mockSuggestions = generateSuggestions(term);
+        setSuggestions(mockSuggestions);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      // Fallback to mock data on error
+      await simulateSearchFallback(term);
+    }
+    
+    setIsLoading(false);
+  };
+
+  const simulateSearchFallback = async (term: string) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const mockResults = generateMockResults(term);
+    setResults(mockResults);
+    setMultiResults([]);
+
+    if (checkTrademark) {
+      const mockTrademarkResults = generateTrademarkResults(term, selectedCategory);
+      setTrademarkResults(mockTrademarkResults);
+    } else {
+      setTrademarkResults([]);
+    }
+
+    if (autoSuggest) {
+      const mockSuggestions = generateSuggestions(term);
+      setSuggestions(mockSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -299,38 +376,23 @@ function App() {
     setIsLoading(true);
     setHasSearched(false);
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     if (isMultiSearch) {
       const validNames = brandName.includes(',') 
         ? brandName.split(',').map(name => name.trim()).filter(name => name)
         : brandNames.filter(name => name.trim());
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const mockMultiResults = generateMultiResults(validNames);
       setMultiResults(mockMultiResults);
       setResults([]);
       setSuggestions([]);
       setTrademarkResults([]);
+      setIsLoading(false);
     } else {
-      const mockResults = generateMockResults(brandName);
-      setResults(mockResults);
-      setMultiResults([]);
-
-      if (checkTrademark) {
-        const mockTrademarkResults = generateTrademarkResults(brandName, selectedCategory);
-        setTrademarkResults(mockTrademarkResults);
-      } else {
-        setTrademarkResults([]);
-      }
-
-      if (autoSuggest) {
-        const mockSuggestions = generateSuggestions(brandName);
-        setSuggestions(mockSuggestions);
-      } else {
-        setSuggestions([]);
-      }
+      await simulateSearch(brandName);
     }
 
-    setIsLoading(false);
     setHasSearched(true);
   };
 
@@ -356,6 +418,13 @@ function App() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
               BrandCheck
             </h1>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <SettingsIcon className="w-5 h-5" />
+              <span>Settings</span>
+            </button>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Instantly check domain, social media, and trademark availability for your brand name. 
@@ -1043,6 +1112,13 @@ function App() {
           </div>
         )}
       </div>
+
+      <Settings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        apiConfig={apiConfig}
+        onSaveConfig={setApiConfig}
+      />
     </div>
   );
 }
