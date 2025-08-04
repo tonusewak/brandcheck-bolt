@@ -595,13 +595,48 @@ function App() {
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Brand Name</th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">.com</th>
                       <th className="text-center py-3 px-2 font-semibold text-gray-700">.in</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">📷</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">🐦</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">📘</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">💼</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">📺</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">🎵</th>
-                      <th className="text-center py-3 px-2 font-semibold text-gray-700">⚖️</th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">📷</span>
+                          <span className="text-xs">Instagram</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">𝕏</span>
+                          <span className="text-xs">X.com</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">📘</span>
+                          <span className="text-xs">Facebook</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">💼</span>
+                          <span className="text-xs">LinkedIn</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">📺</span>
+                          <span className="text-xs">YouTube</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">🎵</span>
+                          <span className="text-xs">TikTok</span>
+                        </div>
+                      </th>
+                      <th className="text-center py-3 px-2 font-semibold text-gray-700">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-lg">⚖️</span>
+                          <span className="text-xs">Trademark</span>
+                        </div>
+                      </th>
                       <th className="text-center py-3 px-4 font-semibold text-gray-700">Score</th>
                     </tr>
                   </thead>
